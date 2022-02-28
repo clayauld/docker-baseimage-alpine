@@ -1,0 +1,10 @@
+#!/usr/bin/with-contenv bash
+
+# check for the linuxserver group existence or if LSUSER is not set
+if [ ! $(getent group linuxserver) ] || [ -z ${LSUSER+x} ]; then
+  exit 0
+fi
+
+# swap custom user to abc for init
+echo "[user-init] swapping ${LSUSER} to abc"
+usermod -l ${LSUSER} abc

@@ -1,0 +1,30 @@
+#!/usr/bin/with-contenv bash
+
+if [[ -z ${LSUSER+x} ]]; then
+  exit 0
+fi
+
+# swap abc to custom user
+echo "[user-init] swapping abc to ${LSUSER}"
+usermod -l ${LSUSER} abc
+
+# link abc/custom user to a special group
+if [ ! $(getent group linuxserver) ]; then
+  groupadd linuxserver
+  usermod -G linuxserver ${LSUSER}
+fi
+
+# modify service files to use new username
+find /etc/services.d/ -name "run" -exec sed -i "s/abc/${LSUSER}/g" {} \;
+
+# set password
+if [ ! -z ${LSPASS+x} ]; then
+  if [ ! -z ${LSUSER+x} ]; then
+    INITUSER=${LSUSER}
+  else
+    INITUSER=abc
+  fi
+  echo "[user-init] custom password detected setting for ${INITUSER}"
+  echo "${INITUSER}:${LSPASS}" | chpasswd
+  usermod -s /bin/bash ${INITUSER}
+fi
